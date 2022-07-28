@@ -1,5 +1,6 @@
 use crate::matrix::Matrix;
 use crate::quaternion::Quaternion;
+use crate::vector::Vector;
 
 impl From<&Quaternion> for Matrix {
     fn from(q: &Quaternion) -> Self {
@@ -14,6 +15,12 @@ impl From<&Quaternion> for Matrix {
             2.0 * q.y * q.z + 2.0 * q.w * q.x,
             1.0 - 2.0 * q.x * q.x - 2.0 * q.y * q.y,
         ])
+    }
+}
+
+impl From<&Quaternion> for Vector {
+    fn from(q: &Quaternion) -> Self {
+        Vector::new(q.x, q.y, q.z)
     }
 }
 

@@ -1,4 +1,5 @@
 use crate::approx_eq::ApproxEq;
+use crate::vector::Vector;
 use std::ops::Mul;
 
 #[derive(Debug)]
@@ -81,10 +82,25 @@ impl Mul for &Matrix {
     }
 }
 
+impl Mul<&Vector> for &Matrix {
+    type Output = Vector;
+    fn mul(self, rhs: &Vector) -> Self::Output {
+        Vector::new(
+            self.elems[0] * rhs.x + self.elems[1] * rhs.y + self.elems[2] * rhs.z,
+            self.elems[3] * rhs.x + self.elems[4] * rhs.y + self.elems[5] * rhs.z,
+            self.elems[6] * rhs.x + self.elems[7] * rhs.y + self.elems[8] * rhs.z,
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::Matrix;
+    use super::*;
     use crate::approx_eq::{assert_approx_eq, ApproxEq};
+
+    const IDENTITY: Matrix = Matrix {
+        elems: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+    };
 
     #[test]
     fn test_matrix_equality_with_identical_matrices() {
@@ -108,5 +124,36 @@ mod tests {
             &a * &b,
             Matrix::new([16.0, 14.0, 22.0, 36.0, 38.0, 58.0, 34.0, 46.0, 68.0])
         )
+    }
+
+    #[test]
+    fn test_a_matrix_multiplied_by_a_vector() {
+        let a = Matrix::new([1.0, 2.0, 3.0, 2.0, 4.0, 4.0, 8.0, 6.0, 4.0]);
+        let b = Vector::new(1.0, 2.0, 3.0);
+        assert_approx_eq!(&a * &b, Vector::new(14.0, 22.0, 32.0));
+    }
+
+    #[test]
+    fn test_multiplying_a_matrix_by_the_identity_matrix() {
+        let a = Matrix::new([0.0, 1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 4.0, 8.0]);
+        assert_approx_eq!(&a * &IDENTITY, a)
+    }
+
+    #[test]
+    fn test_multiplying_the_identity_matrix_by_a_vector() {
+        let a = Vector::new(1.0, 2.0, 3.0);
+        assert_approx_eq!(&IDENTITY * &a, a);
+    }
+
+    #[test]
+    fn test_transposing_a_matrix() {
+        let a = Matrix::new([0.0, 9.0, 3.0, 9.0, 8.0, 0.0, 1.0, 8.0, 5.0]);
+        let tra = Matrix::new([0.0, 9.0, 1.0, 9.0, 8.0, 8.0, 3.0, 0.0, 5.0]);
+        assert_approx_eq!(a.transpose(), tra);
+    }
+
+    #[test]
+    fn test_transposing_the_identity_matrix() {
+        assert_approx_eq!(IDENTITY.transpose(), IDENTITY);
     }
 }
