@@ -1,7 +1,7 @@
-use std::ops::Mul;
+use std::ops::{Mul, Neg, Div};
 use crate::approx_eq::ApproxEq;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -18,9 +18,9 @@ impl Vector {
     // pub fn normalize(&self) -> Self {
     //     self / self.magnitude()
     // }
-    // pub fn dot(&self, other: &Self) -> f64 {
-    //     self.x * other.x + self.y * other.y + self.z * other.z
-    // }
+    pub fn dot(&self, other: &Self) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
     // pub fn cross(&self, b: &Self) -> Self {
     //     Self {
     //         x: self.y * b.z - self.z * b.y,
@@ -59,17 +59,23 @@ impl ApproxEq for Vector {
 //     }
 // }
 
-// impl Neg for Vector {
-//     type Output = Vector;
+impl Neg for &Vector {
+    type Output = Vector;
+    fn neg(self) -> Self::Output {
+        Self::Output {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
+    }
+}
 
-//     fn neg(self) -> Self::Output {
-//         Self::Output {
-//             x: -self.x,
-//             y: -self.y,
-//             z: -self.z,
-//         }
-//     }
-// }
+impl Neg for Vector {
+    type Output = Vector;
+    fn neg(self) -> Self::Output {
+        -&self
+    }
+}
 
 impl Mul<f64> for &Vector {
     type Output = Vector;
@@ -83,17 +89,16 @@ impl Mul<f64> for &Vector {
     }
 }
 
-// impl Div<f64> for &Vector {
-//     type Output = Vector;
-
-//     fn div(self, other: f64) -> Self::Output {
-//         Self::Output {
-//             x: self.x / other,
-//             y: self.y / other,
-//             z: self.z / other,
-//         }
-//     }
-// }
+impl Div<f64> for &Vector {
+    type Output = Vector;
+    fn div(self, other: f64) -> Self::Output {
+        Self::Output {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

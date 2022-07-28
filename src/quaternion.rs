@@ -1,28 +1,19 @@
-use crate::{approx_eq::ApproxEq, vector::Vector};
+use crate::approx_eq::ApproxEq;
+use crate::vector::Vector;
 use std::ops::{Div, Mul};
 
 #[derive(Debug)]
 pub struct Quaternion {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+    pub v: Vector,
     pub w: f64,
 }
 
 impl Quaternion {
-    pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
-        Self { x, y, z, w }
-    }
-    pub fn from_vector_constant(v: &Vector, w: f64) -> Self {
-        Self {
-            x: v.x,
-            y: v.y,
-            z: v.z,
-            w,
-        }
+    pub fn new(v: Vector, w: f64) -> Self {
+        Self { v, w }
     }
     fn dot(&self, other: &Self) -> f64 {
-        self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
+        self.v.dot(&self.v) + self.w * other.w
     }
     fn magnitude(&self) -> f64 {
         self.dot(self).sqrt()
@@ -32,9 +23,7 @@ impl Quaternion {
     }
     pub fn conj(&self) -> Self {
         Self {
-            x: -self.x,
-            y: -self.y,
-            z: -self.z,
+            v: -&self.v,
             w: self.w,
         }
     }
@@ -42,10 +31,7 @@ impl Quaternion {
 
 impl ApproxEq for Quaternion {
     fn approx_eq(&self, other: &Self) -> bool {
-        self.x.approx_eq(&other.x)
-            && self.y.approx_eq(&other.y)
-            && self.z.approx_eq(&other.z)
-            && self.w.approx_eq(&other.w)
+        self.v.approx_eq(&other.v) && self.w.approx_eq(&other.w)
     }
 }
 
@@ -53,10 +39,12 @@ impl Mul for &Quaternion {
     type Output = Quaternion;
     fn mul(self, rhs: Self) -> Self::Output {
         Quaternion {
-            x: self.w * rhs.x + self.x * rhs.w + self.y * rhs.z - self.z * rhs.y,
-            y: self.w * rhs.y + self.y * rhs.w + self.z * rhs.x - self.x * rhs.z,
-            z: self.w * rhs.z + self.z * rhs.w + self.x * rhs.y - self.y * rhs.x,
-            w: self.w * rhs.w - self.x * rhs.x - self.y * rhs.y - self.z * rhs.z,
+            v: Vector::new(
+                self.w * rhs.v.x + self.v.x * rhs.w + self.v.y * rhs.v.z - self.v.z * rhs.v.y,
+                self.w * rhs.v.y + self.v.y * rhs.w + self.v.z * rhs.v.x - self.v.x * rhs.v.z,
+                self.w * rhs.v.z + self.v.z * rhs.w + self.v.x * rhs.v.y - self.v.y * rhs.v.x,
+            ),
+            w: self.w * rhs.w - self.v.x * rhs.v.x - self.v.y * rhs.v.y - self.v.z * rhs.v.z,
         }
     }
 }
@@ -72,9 +60,7 @@ impl Div<f64> for &Quaternion {
     type Output = Quaternion;
     fn div(self, rhs: f64) -> Self::Output {
         Quaternion {
-            x: self.x / rhs,
-            y: self.y / rhs,
-            z: self.z / rhs,
+            v: &self.v / rhs,
             w: self.w / rhs,
         }
     }
@@ -82,7 +68,7 @@ impl Div<f64> for &Quaternion {
 
 impl From<&Vector> for Quaternion {
     fn from(q: &Vector) -> Self {
-        Quaternion::from_vector_constant(q, 0.0)
+        Quaternion::new(q.clone(), 0.0)
     }
 }
 
@@ -91,9 +77,7 @@ impl std::ops::Neg for &Quaternion {
     type Output = Quaternion;
     fn neg(self) -> Self::Output {
         Quaternion {
-            x: -self.x,
-            y: -self.y,
-            z: -self.z,
+            v: -&self.v,
             w: -self.w,
         }
     }
@@ -101,15 +85,19 @@ impl std::ops::Neg for &Quaternion {
 
 #[cfg(test)]
 mod tests {
-    use super::Quaternion;
+    use super::*;
     use crate::approx_eq::{assert_approx_eq, ApproxEq};
+
+    fn new_quaternion(x: f64, y: f64, z: f64, w: f64) -> Quaternion {
+        Quaternion::new(Vector::new(x, y, z), w)
+    }
 
     #[test]
     fn test_multiplication_of_units() {
-        let i = Quaternion::new(1.0, 0.0, 0.0, 0.0);
-        let j = Quaternion::new(0.0, 1.0, 0.0, 0.0);
-        let k = Quaternion::new(0.0, 0.0, 1.0, 0.0);
-        let one = Quaternion::new(0.0, 0.0, 0.0, 1.0);
+        let i = new_quaternion(1.0, 0.0, 0.0, 0.0);
+        let j = new_quaternion(0.0, 1.0, 0.0, 0.0);
+        let k = new_quaternion(0.0, 0.0, 1.0, 0.0);
+        let one = new_quaternion(0.0, 0.0, 0.0, 1.0);
 
         assert_approx_eq!(&i * &i, -&one);
         assert_approx_eq!(&i * &j, k);
@@ -131,9 +119,9 @@ mod tests {
 
     #[test]
     fn test_some_multiplication() {
-        let q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
-        let q2 = Quaternion::new(5.0, 6.0, 7.0, 8.0);
-        assert_approx_eq!(&q1 * &q2, Quaternion::new(24.0, 48.0, 48.0, -6.0));
-        assert_approx_eq!(&q2 * &q1, Quaternion::new(32.0, 32.0, 56.0, -6.0));
+        let q1 = new_quaternion(1.0, 2.0, 3.0, 4.0);
+        let q2 = new_quaternion(5.0, 6.0, 7.0, 8.0);
+        assert_approx_eq!(&q1 * &q2, new_quaternion(24.0, 48.0, 48.0, -6.0));
+        assert_approx_eq!(&q2 * &q1, new_quaternion(32.0, 32.0, 56.0, -6.0));
     }
 }

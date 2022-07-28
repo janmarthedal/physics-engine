@@ -5,15 +5,15 @@ use crate::vector::Vector;
 impl From<&Quaternion> for Matrix {
     fn from(q: &Quaternion) -> Self {
         Matrix::new([
-            1.0 - 2.0 * q.y * q.y - 2.0 * q.z * q.z,
-            2.0 * q.x * q.y - 2.0 * q.w * q.z,
-            2.0 * q.x * q.z + 2.0 * q.w * q.y,
-            2.0 * q.x * q.y + 2.0 * q.w * q.z,
-            1.0 - 2.0 * q.x * q.x - 2.0 * q.z * q.z,
-            2.0 * q.y * q.z - 2.0 * q.w * q.x,
-            2.0 * q.x * q.z - 2.0 * q.w * q.y,
-            2.0 * q.y * q.z + 2.0 * q.w * q.x,
-            1.0 - 2.0 * q.x * q.x - 2.0 * q.y * q.y,
+            1.0 - 2.0 * q.v.y * q.v.y - 2.0 * q.v.z * q.v.z,
+            2.0 * q.v.x * q.v.y - 2.0 * q.w * q.v.z,
+            2.0 * q.v.x * q.v.z + 2.0 * q.w * q.v.y,
+            2.0 * q.v.x * q.v.y + 2.0 * q.w * q.v.z,
+            1.0 - 2.0 * q.v.x * q.v.x - 2.0 * q.v.z * q.v.z,
+            2.0 * q.v.y * q.v.z - 2.0 * q.w * q.v.x,
+            2.0 * q.v.x * q.v.z - 2.0 * q.w * q.v.y,
+            2.0 * q.v.y * q.v.z + 2.0 * q.w * q.v.x,
+            1.0 - 2.0 * q.v.x * q.v.x - 2.0 * q.v.y * q.v.y,
         ])
     }
 }
@@ -21,7 +21,7 @@ impl From<&Quaternion> for Matrix {
 // Assumes `axis` is normalized
 pub fn rotation_about(axis: &Vector, angle: f64) -> Quaternion {
     let phi = 0.5 * angle;
-    Quaternion::from_vector_constant(&(axis * phi.sin()), phi.cos())
+    Quaternion::new(axis * phi.sin(), phi.cos())
 }
 
 #[cfg(test)]
@@ -30,18 +30,22 @@ mod tests {
     use crate::approx_eq::{assert_approx_eq, ApproxEq};
     use std::f64::consts::PI;
 
+    fn new_quaternion(x: f64, y: f64, z: f64, w: f64) -> Quaternion {
+        Quaternion::new(Vector::new(x, y, z), w)
+    }
+
     #[test]
     fn test_unit_quaternions_to_rotations() {
         assert_approx_eq!(
-            Matrix::from(&Quaternion::new(1.0, 0.0, 0.0, 0.0)),
+            Matrix::from(&new_quaternion(1.0, 0.0, 0.0, 0.0)),
             Matrix::new([1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0])
         );
         assert_approx_eq!(
-            Matrix::from(&Quaternion::new(0.0, 1.0, 0.0, 0.0)),
+            Matrix::from(&new_quaternion(0.0, 1.0, 0.0, 0.0)),
             Matrix::new([-1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0])
         );
         assert_approx_eq!(
-            Matrix::from(&Quaternion::new(0.0, 0.0, 1.0, 0.0)),
+            Matrix::from(&new_quaternion(0.0, 0.0, 1.0, 0.0)),
             Matrix::new([-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0])
         );
     }
