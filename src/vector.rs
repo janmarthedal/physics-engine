@@ -1,3 +1,4 @@
+use std::ops::Mul;
 use crate::approx_eq::ApproxEq;
 
 #[derive(Debug)]
@@ -70,25 +71,17 @@ impl ApproxEq for Vector {
 //     }
 // }
 
-// impl Mul<f64> for &Vector {
-//     type Output = Vector;
+impl Mul<f64> for &Vector {
+    type Output = Vector;
 
-//     fn mul(self, other: f64) -> Self::Output {
-//         Self::Output {
-//             x: self.x * other,
-//             y: self.y * other,
-//             z: self.z * other,
-//         }
-//     }
-// }
-
-// impl Mul<&Vector> for f64 {
-//     type Output = Vector;
-
-//     fn mul(self, other: &Vector) -> Self::Output {
-//         other * self
-//     }
-// }
+    fn mul(self, other: f64) -> Self::Output {
+        Self::Output {
+            x: self.x * other,
+            y: self.y * other,
+            z: self.z * other,
+        }
+    }
+}
 
 // impl Div<f64> for &Vector {
 //     type Output = Vector;

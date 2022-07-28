@@ -1,4 +1,5 @@
-use crate::approx_eq::ApproxEq;
+use crate::{approx_eq::ApproxEq, vector::Vector};
+use std::ops::{Div, Mul};
 
 #[derive(Debug)]
 pub struct Quaternion {
@@ -11,6 +12,23 @@ pub struct Quaternion {
 impl Quaternion {
     pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
         Self { x, y, z, w }
+    }
+    pub fn from_vector_constant(v: &Vector, w: f64) -> Self {
+        Self {
+            x: v.x,
+            y: v.y,
+            z: v.z,
+            w,
+        }
+    }
+    fn dot(&self, other: &Self) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
+    }
+    fn magnitude(&self) -> f64 {
+        self.dot(self).sqrt()
+    }
+    pub fn normalize(&self) -> Self {
+        self / self.magnitude()
     }
     pub fn conj(&self) -> Self {
         Self {
@@ -31,7 +49,7 @@ impl ApproxEq for Quaternion {
     }
 }
 
-impl std::ops::Mul for &Quaternion {
+impl Mul for &Quaternion {
     type Output = Quaternion;
     fn mul(self, rhs: Self) -> Self::Output {
         Quaternion {
@@ -40,6 +58,31 @@ impl std::ops::Mul for &Quaternion {
             z: self.w * rhs.z + self.z * rhs.w + self.x * rhs.y - self.y * rhs.x,
             w: self.w * rhs.w - self.x * rhs.x - self.y * rhs.y - self.z * rhs.z,
         }
+    }
+}
+
+impl Mul<&Quaternion> for Quaternion {
+    type Output = Quaternion;
+    fn mul(self, rhs: &Self) -> Self::Output {
+        &self * rhs
+    }
+}
+
+impl Div<f64> for &Quaternion {
+    type Output = Quaternion;
+    fn div(self, rhs: f64) -> Self::Output {
+        Quaternion {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+            w: self.w / rhs,
+        }
+    }
+}
+
+impl From<&Vector> for Quaternion {
+    fn from(q: &Vector) -> Self {
+        Quaternion::from_vector_constant(q, 0.0)
     }
 }
 
