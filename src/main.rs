@@ -1,8 +1,4 @@
-mod approx_eq;
-mod convert;
-mod matrix;
-mod quaternion;
-mod vector;
+mod math;
 
 fn main() {
     println!("Hello, world!");

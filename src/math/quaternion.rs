@@ -1,5 +1,5 @@
-use crate::approx_eq::ApproxEq;
-use crate::vector::Vector;
+use crate::math::approx_eq::ApproxEq;
+use crate::math::vector::Vector;
 use std::ops::{Div, Mul};
 
 #[derive(Debug)]
@@ -96,7 +96,7 @@ impl std::ops::Neg for &Quaternion {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::approx_eq::{assert_approx_eq, ApproxEq};
+    use crate::math::approx_eq::{assert_approx_eq, ApproxEq};
 
     fn new_quaternion(x: f64, y: f64, z: f64, w: f64) -> Quaternion {
         Quaternion::new(Vector::new(x, y, z), w)

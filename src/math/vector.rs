@@ -1,5 +1,5 @@
 use std::ops::{Mul, Neg, Div};
-use crate::approx_eq::ApproxEq;
+use crate::math::approx_eq::ApproxEq;
 
 #[derive(Debug, Clone)]
 pub struct Vector {
@@ -12,12 +12,6 @@ impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
-    // pub fn magnitude(&self) -> f64 {
-    //     self.dot(self).sqrt()
-    // }
-    // pub fn normalize(&self) -> Self {
-    //     self / self.magnitude()
-    // }
     pub fn dot(&self, other: &Self) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
@@ -35,29 +29,6 @@ impl ApproxEq for Vector {
         self.x.approx_eq(&other.x) && self.y.approx_eq(&other.y) && self.z.approx_eq(&other.z)
     }
 }
-
-// impl Add<&Vector> for &Vector {
-//     type Output = Vector;
-//     fn add(self, rhs: &Vector) -> Self::Output {
-//         Self::Output {
-//             x: self.x + rhs.x,
-//             y: self.y + rhs.y,
-//             z: self.z + rhs.z,
-//         }
-//     }
-// }
-
-// impl Sub<&Vector> for &Vector {
-//     type Output = Vector;
-
-//     fn sub(self, rhs: &Vector) -> Self::Output {
-//         Self::Output {
-//             x: self.x - rhs.x,
-//             y: self.y - rhs.y,
-//             z: self.z - rhs.z,
-//         }
-//     }
-// }
 
 impl Neg for &Vector {
     type Output = Vector;
@@ -103,7 +74,7 @@ impl Div<f64> for &Vector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::approx_eq::assert_approx_eq;
+    use crate::math::approx_eq::assert_approx_eq;
 
     #[test]
     fn test_new_vector() {
@@ -127,29 +98,29 @@ mod tests {
     //     assert_approx_eq!(zero - &v, Vector::new(-1.0, 2.0, -3.0));
     // }
 
-    // #[test]
-    // fn test_negating_a_vector() {
-    //     let a = Vector::new(1.0, -2.0, 3.0);
-    //     assert_approx_eq!(-a, Vector::new(-1.0, 2.0, -3.0));
-    // }
+    #[test]
+    fn test_negating_a_vector() {
+        let a = Vector::new(1.0, -2.0, 3.0);
+        assert_approx_eq!(-a, Vector::new(-1.0, 2.0, -3.0));
+    }
 
-    // #[test]
-    // fn test_multiplying_a_vector_by_a_scalar() {
-    //     let a = Vector::new(1.0, -2.0, 3.0);
-    //     assert_approx_eq!(&a * 3.5, Vector::new(3.5, -7.0, 10.5));
-    // }
+    #[test]
+    fn test_multiplying_a_vector_by_a_scalar() {
+        let a = Vector::new(1.0, -2.0, 3.0);
+        assert_approx_eq!(&a * 3.5, Vector::new(3.5, -7.0, 10.5));
+    }
 
-    // #[test]
-    // fn test_multiplying_a_vector_by_a_fraction() {
-    //     let a = Vector::new(1.0, -2.0, 3.0);
-    //     assert_approx_eq!(0.5 * &a, Vector::new(0.5, -1.0, 1.5));
-    // }
+    #[test]
+    fn test_multiplying_a_vector_by_a_fraction() {
+        let a = Vector::new(1.0, -2.0, 3.0);
+        assert_approx_eq!(&a * 0.5, Vector::new(0.5, -1.0, 1.5));
+    }
 
-    // #[test]
-    // fn test_dividing_a_vector_by_a_scalar() {
-    //     let a = Vector::new(1.0, -2.0, 3.0);
-    //     assert_approx_eq!(&a / 2.0, Vector::new(0.5, -1.0, 1.5));
-    // }
+    #[test]
+    fn test_dividing_a_vector_by_a_scalar() {
+        let a = Vector::new(1.0, -2.0, 3.0);
+        assert_approx_eq!(&a / 2.0, Vector::new(0.5, -1.0, 1.5));
+    }
 
     // #[test]
     // fn test_the_magnitude_of_vector1() {
@@ -203,12 +174,12 @@ mod tests {
     //     assert_approx_eq!(norm.magnitude(), 1.0);
     // }
 
-    // #[test]
-    // fn test_the_dot_product_of_two_tuples() {
-    //     let a = Vector::new(1.0, 2.0, 3.0);
-    //     let b = Vector::new(2.0, 3.0, 4.0);
-    //     assert_approx_eq!(a.dot(&b), 20.0);
-    // }
+    #[test]
+    fn test_the_dot_product_of_two_vectors() {
+        let a = Vector::new(1.0, 2.0, 3.0);
+        let b = Vector::new(2.0, 3.0, 4.0);
+        assert_approx_eq!(a.dot(&b), 20.0);
+    }
 
     // #[test]
     // fn test_the_cross_product_of_two_vectors() {

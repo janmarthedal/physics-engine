@@ -1,5 +1,5 @@
-use crate::approx_eq::{ApproxEq, EPSILON};
-use crate::vector::Vector;
+use crate::math::approx_eq::{ApproxEq, EPSILON};
+use crate::math::vector::Vector;
 use std::ops::Mul;
 
 #[derive(Debug)]
@@ -129,7 +129,7 @@ impl Mul<&Vector> for &Matrix {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::approx_eq::{assert_approx_eq, ApproxEq};
+    use crate::math::approx_eq::{assert_approx_eq, ApproxEq};
 
     const IDENTITY: Matrix = Matrix {
         elems: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],

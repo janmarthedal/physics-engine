@@ -1,6 +1,6 @@
-use crate::matrix::Matrix;
-use crate::quaternion::Quaternion;
-use crate::vector::Vector;
+use crate::math::matrix::Matrix;
+use crate::math::quaternion::Quaternion;
+use crate::math::vector::Vector;
 
 impl From<&Quaternion> for Matrix {
     fn from(q: &Quaternion) -> Self {
@@ -27,7 +27,7 @@ pub fn rotation_about(axis: &Vector, angle: f64) -> Quaternion {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::approx_eq::{assert_approx_eq, ApproxEq};
+    use crate::math::approx_eq::{assert_approx_eq, ApproxEq};
     use std::f64::consts::PI;
 
     fn new_quaternion(x: f64, y: f64, z: f64, w: f64) -> Quaternion {
