@@ -56,6 +56,16 @@ impl Mul<&Quaternion> for Quaternion {
     }
 }
 
+impl Mul<f64> for &Quaternion {
+    type Output = Quaternion;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Quaternion {
+            v: &self.v * rhs,
+            w: self.w * rhs,
+        }
+    }
+}
+
 impl Div<f64> for &Quaternion {
     type Output = Quaternion;
     fn div(self, rhs: f64) -> Self::Output {

@@ -1,4 +1,4 @@
-use crate::approx_eq::ApproxEq;
+use crate::approx_eq::{ApproxEq, EPSILON};
 use crate::vector::Vector;
 use std::ops::Mul;
 
@@ -25,6 +25,39 @@ impl Matrix {
                 self.elems[5],
                 self.elems[8],
             ],
+        }
+    }
+    pub fn inverse(&self) -> Option<Self> {
+        let [m00, m01, m02, m10, m11, m12, m20, m21, m22] = self.elems;
+        // cofactors
+        let c00 = m11 * m22 - m12 * m21;
+        let c01 = -(m10 * m22 - m12 * m20);
+        let c02 = m10 * m21 - m11 * m20;
+        let c10 = -(m01 * m22 - m21 * m02);
+        let c11 = m00 * m22 - m02 * m20;
+        let c12 = -(m00 * m21 - m01 * m20);
+        let c20 = m01 * m12 - m11 * m02;
+        let c21 = -(m00 * m12 - m10 * m02);
+        let c22 = m00 * m11 - m01 * m10;
+        // determinant of whole matrix
+        let m = m00 * c00 + m01 * c01 + m02 * c02;
+        if m.abs() > EPSILON {
+            let im = 1.0 / m;
+            Some(Matrix {
+                elems: [
+                    c00 * im,
+                    c10 * im,
+                    c20 * im,
+                    c01 * im,
+                    c11 * im,
+                    c21 * im,
+                    c02 * im,
+                    c12 * im,
+                    c22 * im,
+                ],
+            })
+        } else {
+            None
         }
     }
 }
@@ -155,5 +188,34 @@ mod tests {
     #[test]
     fn test_transposing_the_identity_matrix() {
         assert_approx_eq!(IDENTITY.transpose(), IDENTITY);
+    }
+
+    #[test]
+    fn test_calculating_the_inverse_of_a_matrix() {
+        let a = Matrix::new([-5.0, 2.0, 6.0, 1.0, -5.0, 1.0, 7.0, 7.0, -6.0]);
+        let b = a.inverse().unwrap();
+        assert_approx_eq!(&a * &b, IDENTITY);
+    }
+
+    #[test]
+    fn test_calculating_the_inverse_of_another_matrix() {
+        let a = Matrix::new([8.0, -5.0, 9.0, 7.0, 5.0, 6.0, -6.0, 0.0, 9.0]);
+        let b = a.inverse().unwrap();
+        assert_approx_eq!(&a * &b, IDENTITY);
+    }
+
+    #[test]
+    fn test_calculating_the_inverse_of_third_matrix() {
+        let a = Matrix::new([9.0, 3.0, 0.0, -5.0, -2.0, -6.0, -4.0, 9.0, 6.0]);
+        let b = a.inverse().unwrap();
+        assert_approx_eq!(&a * &b, IDENTITY);
+    }
+
+    #[test]
+    fn test_multiplying_a_product_by_its_inverse() {
+        let a = Matrix::new([3.0, -9.0, 7.0, 3.0, -8.0, 2.0, -4.0, 4.0, 4.0]);
+        let b = Matrix::new([8.0, 2.0, 2.0, 3.0, -1.0, 7.0, 7.0, 0.0, 5.0]);
+        let c = &a * &b;
+        assert_approx_eq!(&c * &b.inverse().unwrap(), a);
     }
 }
