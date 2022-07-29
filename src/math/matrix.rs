@@ -1,4 +1,5 @@
 use crate::math::approx_eq::{ApproxEq, EPSILON};
+use crate::math::quaternion::Quaternion;
 use crate::math::vector::Vector;
 use std::ops::Mul;
 
@@ -25,6 +26,31 @@ impl Matrix {
                 self.elems[5],
                 self.elems[8],
             ],
+        }
+    }
+    // Assumes `self` is orthonormal
+    pub fn to_quaternion(&self) -> Quaternion {
+        let [m00, m01, m02, m10, m11, m12, m20, m21, m22] = self.elems;
+        let trace = m00 + m11 + m22;
+        if trace >= 0.0 {
+            let s = (trace + 1.0).sqrt();
+            let v = 0.5 / s;
+            Quaternion::coords((m21 - m12) * v, (m02 - m20) * v, (m10 - m01) * v, 0.5 * s)
+        } else {
+            let max = m00.max(m11).max(m22);
+            if m00 == max {
+                let s = (m00 - (m11 + m22) + 1.0).sqrt();
+                let v = 0.5 / s;
+                Quaternion::coords(0.5 * s, (m01 + m10) * v, (m20 + m02) * v, (m21 - m12) * v)
+            } else if m11 == max {
+                let s = (m11 - (m22 + m00) + 1.0).sqrt();
+                let v = 0.5 / s;
+                Quaternion::coords((m01 + m10) * v, 0.5 * s, (m12 + m21) * v, (m02 - m20) * v)
+            } else {
+                let s = (m22 - (m00 + m11) + 1.0).sqrt();
+                let v = 0.5 / s;
+                Quaternion::coords((m20 + m02) * v, (m12 + m21) * v, 0.5 * s, (m10 - m01) * v)
+            }
         }
     }
     pub fn inverse(&self) -> Option<Self> {
@@ -130,6 +156,7 @@ impl Mul<&Vector> for &Matrix {
 mod tests {
     use super::*;
     use crate::math::approx_eq::{assert_approx_eq, ApproxEq};
+    use std::f64::consts::PI;
 
     const IDENTITY: Matrix = Matrix {
         elems: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
@@ -217,5 +244,33 @@ mod tests {
         let b = Matrix::new([8.0, 2.0, 2.0, 3.0, -1.0, 7.0, 7.0, 0.0, 5.0]);
         let c = &a * &b;
         assert_approx_eq!(&c * &b.inverse().unwrap(), a);
+    }
+
+    #[test]
+    fn test_matrix_to_quaternion1() {
+        // trace positive
+        let q = Quaternion::coords(1.0, 2.0, 3.0, 4.0).normalize();
+        assert_approx_eq!(q.to_rotation_matrix().to_quaternion(), q);
+    }
+
+    #[test]
+    fn test_matrix_to_quaternion2() {
+        // m00 max
+        let q = Quaternion::from_rotation(&Vector::new(1.0, 0.0, 0.0), 3.0 * PI / 4.0);
+        assert_approx_eq!(q.to_rotation_matrix().to_quaternion(), q);
+    }
+
+    #[test]
+    fn test_matrix_to_quaternion3() {
+        // m11 max
+        let q = Quaternion::coords(3.0, 4.0, 1.0, 2.0).normalize();
+        assert_approx_eq!(q.to_rotation_matrix().to_quaternion(), q);
+    }
+
+    #[test]
+    fn test_matrix_to_quaternion4() {
+        // m22 max
+        let q = Quaternion::coords(2.0, 3.0, 4.0, 1.0).normalize();
+        assert_approx_eq!(q.to_rotation_matrix().to_quaternion(), q);
     }
 }

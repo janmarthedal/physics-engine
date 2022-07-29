@@ -14,11 +14,10 @@ impl Quaternion {
     pub const fn new(v: Vector, w: f64) -> Self {
         Self { v, w }
     }
-    #[cfg(test)]
     pub const fn coords(x: f64, y: f64, z: f64, w: f64) -> Self {
         Self::new(Vector::new(x, y, z), w)
     }
-    // Assumes `axis` is normalized
+    // Assumes `axis` is of unit length
     pub fn from_rotation(axis: &Vector, angle: f64) -> Self {
         let phi = 0.5 * angle;
         Quaternion::new(axis * phi.sin(), phi.cos())
@@ -38,6 +37,7 @@ impl Quaternion {
             w: self.w,
         }
     }
+    // Assumes `self` is of unit length
     pub fn to_rotation_matrix(&self) -> Matrix {
         Matrix::new([
             1.0 - 2.0 * sq(self.v.y) - 2.0 * sq(self.v.z),
