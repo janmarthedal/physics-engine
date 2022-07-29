@@ -9,7 +9,7 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new(elems: [f64; 9]) -> Self {
+    pub const fn new(elems: [f64; 9]) -> Self {
         Self { elems }
     }
     pub fn transpose(&self) -> Self {

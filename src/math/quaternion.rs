@@ -1,4 +1,6 @@
 use crate::math::approx_eq::ApproxEq;
+use crate::math::matrix::Matrix;
+use crate::math::sq;
 use crate::math::vector::Vector;
 use std::ops::{Div, Mul};
 
@@ -9,8 +11,17 @@ pub struct Quaternion {
 }
 
 impl Quaternion {
-    pub fn new(v: Vector, w: f64) -> Self {
+    pub const fn new(v: Vector, w: f64) -> Self {
         Self { v, w }
+    }
+    #[cfg(test)]
+    pub const fn coords(x: f64, y: f64, z: f64, w: f64) -> Self {
+        Self::new(Vector::new(x, y, z), w)
+    }
+    // Assumes `axis` is normalized
+    pub fn from_rotation(axis: &Vector, angle: f64) -> Self {
+        let phi = 0.5 * angle;
+        Quaternion::new(axis * phi.sin(), phi.cos())
     }
     fn dot(&self, other: &Self) -> f64 {
         self.v.dot(&self.v) + self.w * other.w
@@ -26,6 +37,19 @@ impl Quaternion {
             v: -&self.v,
             w: self.w,
         }
+    }
+    pub fn to_rotation_matrix(&self) -> Matrix {
+        Matrix::new([
+            1.0 - 2.0 * sq(self.v.y) - 2.0 * sq(self.v.z),
+            2.0 * self.v.x * self.v.y - 2.0 * self.w * self.v.z,
+            2.0 * self.v.x * self.v.z + 2.0 * self.w * self.v.y,
+            2.0 * self.v.x * self.v.y + 2.0 * self.w * self.v.z,
+            1.0 - 2.0 * sq(self.v.x) - 2.0 * sq(self.v.z),
+            2.0 * self.v.y * self.v.z - 2.0 * self.w * self.v.x,
+            2.0 * self.v.x * self.v.z - 2.0 * self.w * self.v.y,
+            2.0 * self.v.y * self.v.z + 2.0 * self.w * self.v.x,
+            1.0 - 2.0 * sq(self.v.x) - 2.0 * sq(self.v.y),
+        ])
     }
 }
 
@@ -97,17 +121,14 @@ impl std::ops::Neg for &Quaternion {
 mod tests {
     use super::*;
     use crate::math::approx_eq::{assert_approx_eq, ApproxEq};
-
-    fn new_quaternion(x: f64, y: f64, z: f64, w: f64) -> Quaternion {
-        Quaternion::new(Vector::new(x, y, z), w)
-    }
+    use std::f64::consts::PI;
 
     #[test]
     fn test_multiplication_of_units() {
-        let i = new_quaternion(1.0, 0.0, 0.0, 0.0);
-        let j = new_quaternion(0.0, 1.0, 0.0, 0.0);
-        let k = new_quaternion(0.0, 0.0, 1.0, 0.0);
-        let one = new_quaternion(0.0, 0.0, 0.0, 1.0);
+        let i = Quaternion::coords(1.0, 0.0, 0.0, 0.0);
+        let j = Quaternion::coords(0.0, 1.0, 0.0, 0.0);
+        let k = Quaternion::coords(0.0, 0.0, 1.0, 0.0);
+        let one = Quaternion::coords(0.0, 0.0, 0.0, 1.0);
 
         assert_approx_eq!(&i * &i, -&one);
         assert_approx_eq!(&i * &j, k);
@@ -129,9 +150,75 @@ mod tests {
 
     #[test]
     fn test_some_multiplication() {
-        let q1 = new_quaternion(1.0, 2.0, 3.0, 4.0);
-        let q2 = new_quaternion(5.0, 6.0, 7.0, 8.0);
-        assert_approx_eq!(&q1 * &q2, new_quaternion(24.0, 48.0, 48.0, -6.0));
-        assert_approx_eq!(&q2 * &q1, new_quaternion(32.0, 32.0, 56.0, -6.0));
+        let q1 = Quaternion::coords(1.0, 2.0, 3.0, 4.0);
+        let q2 = Quaternion::coords(5.0, 6.0, 7.0, 8.0);
+        assert_approx_eq!(&q1 * &q2, Quaternion::coords(24.0, 48.0, 48.0, -6.0));
+        assert_approx_eq!(&q2 * &q1, Quaternion::coords(32.0, 32.0, 56.0, -6.0));
+    }
+
+    #[test]
+    fn test_unit_quaternions_to_rotations() {
+        assert_approx_eq!(
+            Quaternion::coords(1.0, 0.0, 0.0, 0.0).to_rotation_matrix(),
+            Matrix::new([1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0])
+        );
+        assert_approx_eq!(
+            Quaternion::coords(0.0, 1.0, 0.0, 0.0).to_rotation_matrix(),
+            Matrix::new([-1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0])
+        );
+        assert_approx_eq!(
+            Quaternion::coords(0.0, 0.0, 1.0, 0.0).to_rotation_matrix(),
+            Matrix::new([-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0])
+        );
+    }
+
+    #[test]
+    fn test_rotation_x_quaternion_to_matrix() {
+        let a = PI / 3.0;
+        let c = a.cos();
+        let s = a.sin();
+        let r = Quaternion::from_rotation(&Vector::new(1.0, 0.0, 0.0), a).to_rotation_matrix();
+        assert_approx_eq!(r, Matrix::new([1.0, 0.0, 0.0, 0.0, c, -s, 0.0, s, c]));
+    }
+
+    #[test]
+    fn test_rotation_y_quaternion_to_matrix() {
+        let a = PI / 3.0;
+        let c = a.cos();
+        let s = a.sin();
+        let r = Quaternion::from_rotation(&Vector::new(0.0, 1.0, 0.0), a).to_rotation_matrix();
+        assert_approx_eq!(r, Matrix::new([c, 0.0, s, 0.0, 1.0, 0.0, -s, 0.0, c]));
+    }
+
+    #[test]
+    fn test_rotation_z_quaternion_to_matrix() {
+        let a = PI / 3.0;
+        let c = a.cos();
+        let s = a.sin();
+        let r = Quaternion::from_rotation(&Vector::new(0.0, 0.0, 1.0), a).to_rotation_matrix();
+        assert_approx_eq!(r, Matrix::new([c, -s, 0.0, s, c, 0.0, 0.0, 0.0, 1.0]));
+    }
+
+    #[test]
+    fn test_rotation_about_z_axis_using_quaternion_vs_matrix() {
+        let q = Quaternion::from_rotation(&Vector::new(0.0, 0.0, 1.0), PI / 3.0);
+        let r = q.to_rotation_matrix();
+        let v = Vector::new(2.0, 1.0, 3.0);
+        let u = &r * &v;
+        let uhat = &q * &Quaternion::from(&v) * &q.conj();
+        assert_approx_eq!(Quaternion::from(&u), uhat);
+    }
+
+    #[test]
+    fn test_rotation_about_some_axis_using_quaternion_vs_matrix() {
+        let q = Quaternion::from_rotation(
+            &Vector::new(1.0 / 3f64.sqrt(), -1.0 / 3f64.sqrt(), 1.0 / 3f64.sqrt()),
+            PI / 3.0,
+        );
+        let r = q.to_rotation_matrix();
+        let v = Vector::new(2.0, 1.0, 3.0);
+        let u = &r * &v;
+        let uhat = &q * &Quaternion::from(&v) * &q.conj();
+        assert_approx_eq!(Quaternion::from(&u), uhat);
     }
 }
