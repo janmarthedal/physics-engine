@@ -2,9 +2,9 @@ use crate::math::approx_eq::ApproxEq;
 use crate::math::matrix::Matrix;
 use crate::math::sq;
 use crate::math::vector::Vector;
-use std::ops::{Div, Mul};
+use std::ops::{Add, Div, Mul};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Quaternion {
     pub v: Vector,
     pub w: f64,
@@ -56,6 +56,23 @@ impl Quaternion {
 impl ApproxEq for Quaternion {
     fn approx_eq(&self, other: &Self) -> bool {
         self.v.approx_eq(&other.v) && self.w.approx_eq(&other.w)
+    }
+}
+
+impl Add for &Quaternion {
+    type Output = Quaternion;
+    fn add(self, rhs: Self) -> Self::Output {
+        Quaternion {
+            v: &self.v + &rhs.v,
+            w: self.w + rhs.w,
+        }
+    }
+}
+
+impl Add<&Quaternion> for Quaternion {
+    type Output = Quaternion;
+    fn add(self, rhs: &Quaternion) -> Self::Output {
+        &self + rhs
     }
 }
 

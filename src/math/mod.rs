@@ -1,7 +1,7 @@
 mod approx_eq;
-mod matrix;
-mod quaternion;
-mod vector;
+pub(crate) mod matrix;
+pub(crate) mod quaternion;
+pub(crate) mod vector;
 
 #[inline(always)]
 pub fn sq(v: f64) -> f64 {

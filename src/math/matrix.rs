@@ -152,6 +152,13 @@ impl Mul<&Vector> for &Matrix {
     }
 }
 
+impl Mul<Vector> for &Matrix {
+    type Output = Vector;
+    fn mul(self, rhs: Vector) -> Self::Output {
+        self * &rhs
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
