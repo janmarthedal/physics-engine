@@ -1,7 +1,6 @@
 use super::rigid_body::RigidBody;
 use crate::math::sq;
 use crate::math::matrix::Matrix;
-use crate::math::vector::Vector;
 
 pub struct RigidBox {
     x: f64,
@@ -38,8 +37,5 @@ impl RigidBody for RigidBox {
             0.0,
             s * (sq(self.x) + sq(self.y)),
         ])
-    }
-    fn draw(&self, x: &Vector, _r: &Matrix) {
-        println!("Position: {}, {}, {}", x.x, x.y, x.z);
     }
 }

@@ -47,10 +47,10 @@ impl RigidBodyState {
 }
 
 struct WorldObject {
-    state: RigidBodyState,
+    body_id: usize,
     inv_mass: f64,
     inv_inertia: Matrix,
-    body: Box<dyn RigidBody>,
+    state: RigidBodyState,
 }
 
 const FORCE: Vector = Vector::new(0.0, 0.0, -1.0);
@@ -141,9 +141,10 @@ impl World {
             objects: Vec::new(),
         }
     }
-    pub fn add(
+    pub fn add<B: RigidBody>(
         &mut self,
-        body: impl RigidBody + 'static,
+        body_id: usize,
+        body: &B,
         x: &Vector,
         q: &Quaternion,
         v: &Vector,
@@ -153,21 +154,22 @@ impl World {
         let inv_inertia = body.inertia_tensor().inverse().unwrap();
         let state = RigidBodyState::new(x, q, v, l, inv_mass, &inv_inertia);
         let object = WorldObject {
+            body_id,
             state,
             inv_mass,
             inv_inertia,
-            body: Box::new(body),
         };
         self.objects.push(object);
     }
-    pub fn step(&mut self, t: f64, dt: f64) {
+    pub fn step(&mut self, t: f64, dt: f64) -> f64 {
         for o in &mut self.objects {
             o.step(t, dt);
         }
+        t + dt
     }
-    pub fn draw(&self) {
+    pub fn for_each_object<C: Fn(usize, &Vector, &Matrix)>(&self, callback: C) {
         for o in &self.objects {
-            o.body.draw(&o.state.x, &o.state.r);
+            callback(o.body_id, &o.state.x, &o.state.r);
         }
     }
 }
