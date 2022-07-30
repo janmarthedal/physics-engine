@@ -6,7 +6,7 @@ use crate::world::rigid_box::RigidBox;
 use crate::world::world::World;
 
 fn main() {
-    let mut world = World::new();
+    let mut world = World::new(Vector::new(0.0, 0.0, -1.0));
     let rbox = RigidBox::new(1.0, 0.1, 0.5, 1.0);
 
     world.add(

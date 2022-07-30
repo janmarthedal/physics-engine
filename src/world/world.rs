@@ -53,11 +53,10 @@ struct WorldObject {
     state: RigidBodyState,
 }
 
-const FORCE: Vector = Vector::new(0.0, 0.0, -1.0);
 const TORQUE: Vector = Vector::new(0.0, 0.0, 0.0);
 
 impl WorldObject {
-    fn step(&mut self, _t: f64, dt: f64) {
+    fn step(&mut self, _t: f64, dt: f64, force: &Vector) {
         let halfdt = 0.5 * dt;
         let thirddt = dt / 3.0;
         let sixthdt = dt / 6.0;
@@ -66,7 +65,7 @@ impl WorldObject {
         // a1 = G(t, s0), b1 = s0 + (dt / 2) * a1
         let a1dxdt = &s0.v;
         let a1dqdt = &Quaternion::new(&s0.w * 0.5, 0.0) * &s0.q;
-        let a1dpdt = &FORCE;
+        let a1dpdt = force;
         let a1dldt = &TORQUE;
 
         let x = &s0.x + &(a1dxdt * halfdt);
@@ -78,7 +77,7 @@ impl WorldObject {
         // a2 = G(t + dt / 2, b1), b2 = s0 + (dt / 2) * a2
         let a2dxdt = &b1.v;
         let a2dqdt = &Quaternion::new(&b1.w * 0.5, 0.0) * &b1.q;
-        let a2dpdt = &FORCE;
+        let a2dpdt = force;
         let a2dldt = &TORQUE;
 
         let x = &s0.x + &(a2dxdt * halfdt);
@@ -90,7 +89,7 @@ impl WorldObject {
         // a3 = G(t + dt / 2, b2), b3 = s0 + dt * a3
         let a3dxdt = &b2.v;
         let a3dqdt = &Quaternion::new(&b2.w * 0.5, 0.0) * &b2.q;
-        let a3dpdt = &FORCE;
+        let a3dpdt = force;
         let a3dldt = &TORQUE;
 
         let x = &s0.x + &(a3dxdt * dt);
@@ -102,7 +101,7 @@ impl WorldObject {
         // a4 = G(t + dt, b4), s1 = s0 + (dt / 6) * (a1 + 2 * a2 + 2 * a3 + a4)
         let a4dxdt = &b3.v;
         let a4dqdt = &Quaternion::new(&b3.w * 0.5, 0.0) * &b3.q;
-        let a4dpdt = &FORCE;
+        let a4dpdt = force;
         let a4dldt = &TORQUE;
 
         let x = &s0.x
@@ -133,12 +132,14 @@ impl WorldObject {
 
 pub struct World {
     objects: Vec<WorldObject>,
+    gravity: Vector,
 }
 
 impl World {
-    pub fn new() -> Self {
+    pub fn new(gravity: Vector) -> Self {
         Self {
             objects: Vec::new(),
+            gravity,
         }
     }
     pub fn add<B: RigidBody>(
@@ -163,7 +164,7 @@ impl World {
     }
     pub fn step(&mut self, t: f64, dt: f64) -> f64 {
         for o in &mut self.objects {
-            o.step(t, dt);
+            o.step(t, dt, &self.gravity);
         }
         t + dt
     }
