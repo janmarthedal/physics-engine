@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-speedy2d = "1.7.0"
+kiss3d = "0.34.0"
+nalgebra = "0.30.1"
