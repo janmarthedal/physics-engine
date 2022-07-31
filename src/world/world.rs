@@ -168,7 +168,7 @@ impl World {
         }
         t + dt
     }
-    pub fn for_each_object<C: Fn(usize, &Vector, &Matrix)>(&self, callback: C) {
+    pub fn for_each_object<C: FnMut(usize, &Vector, &Matrix)>(&self, mut callback: C) {
         for o in &self.objects {
             callback(o.body_id, &o.state.x, &o.state.r);
         }
